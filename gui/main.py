@@ -15,16 +15,24 @@ class TodoModel(QAbstractListModel):
 
     def data(self, index, role):
         if role == Qt.DisplayRole:
-            status, text = self.todos[index.row()]
+            text = self.todos[index.row()]
             return text
 
         if role == Qt.DecorationRole:
-            status, text = self.todos[index.row()]
-            if status:
+            text = self.todos[index.row()]
+            if text is "done":
                 return "x"
+            
+    def setData(self, index, value, role):
+        if role == Qt.EditRole:
+            self.todos[index.row()] = value
+            return True
 
     def rowCount(self, index):
         return len(self.todos)
+    
+    def flags(self, index):
+            return Qt.ItemIsSelectable|Qt.ItemIsEnabled|Qt.ItemIsEditable
     
     
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -35,6 +43,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.MyList.setModel(self.model)
         self.MyPushButtonAdd.pressed.connect(self.add)
         self.MyPushButtonDelete.pressed.connect(self.delete)
+        
 
 
     def add(self):
@@ -42,7 +51,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         input_text = input_text.strip()
         if input_text:  # Don't add empty strings.
             # Access the list via the model.
-            self.model.todos.append((False, input_text))
+            self.model.todos.append(input_text)
             # Trigger refresh.
             self.model.layoutChanged.emit()
             # Empty the input

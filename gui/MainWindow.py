@@ -80,8 +80,9 @@ class Ui_MainWindow(object):
         self.MyList = QListView(self.frame)
         self.MyList.setObjectName(u"MyList")
         self.MyList.setMouseTracking(False)
-        self.MyList.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.MyList.setEditTriggers(QAbstractItemView.DoubleClicked)
         self.MyList.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.MyList.setViewMode(QListView.ListMode)
 
         self.horizontalLayout.addWidget(self.MyList)
 
@@ -98,6 +99,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
+        self.MyList.doubleClicked.connect(self.MyList.edit)
 
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
