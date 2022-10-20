@@ -22,6 +22,10 @@ class TodoModel(QAbstractListModel):
             text = self.todos[index.row()]
             if text is "done":
                 return "x"
+        #To not be empty during edit
+        if role == Qt.EditRole: 
+            text = self.todos[index.row()]
+            return text
             
     def setData(self, index, value, role):
         if role == Qt.EditRole:
