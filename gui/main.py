@@ -42,8 +42,10 @@ class GraphSignals(QObject):
     """
 
     data = Signal(tuple)  # <1> Name , value ,time??    
-    pause = Signal(bool)
 
+
+class WorkerKilledException(Exception):
+    pass
 
 class GraphThread(QRunnable):
     """
@@ -57,15 +59,16 @@ class GraphThread(QRunnable):
         super().__init__()
         self.worker_id = uuid.uuid4().hex  # Unique ID for this worker.
         self.signals = GraphSignals()
-        
-         
 
-    @Slot()
+        self.is_paused = True
+        self.is_killed = False
+
+
+    @Slot()             
     def run(self):
         
         
-        while self.signals.pause:
-            time.sleep(0)  # <1>
+
             
         total_n = 1000
         y2 = random.randint(0, 10)
@@ -79,7 +82,19 @@ class GraphThread(QRunnable):
             value += n * y2 - n * y
 
             self.signals.data.emit((self.worker_id, n, value))  # <2>
+            
+
+                
             time.sleep(delay)
+            
+            if self.is_killed:
+                raise WorkerKilledException
+            
+            while self.is_paused:
+                time.sleep(0)  # <1>   
+                if self.is_killed:
+                    raise WorkerKilledException
+
 
 
 
@@ -89,6 +104,8 @@ class GraphThread(QRunnable):
     def resume(self):
         self.is_paused = False
 
+    def kill(self):
+        self.is_killed = True
 
 class TodoModel(QAbstractListModel):
     def __init__(self, todos_list=None):
@@ -124,12 +141,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.MyList.setModel(self.model)
         self.MyPushButtonAdd.pressed.connect(self.add)
         self.MyPushButtonDelete.pressed.connect(self.delete)
-        self.DebugButton.pressed.connect(self.graph_function)
         
-        self.StartGraph.pressed.connect(self.worker.resume)
-        self.PauseGraph.pressed.connect(self.worker.pause)
-
+        
+       # self.DebugButton.pressed.connect(self.graph_function)
+       
+       
         self.threadpool = QThreadPool() # Threading 
+        self.GraphWorker = GraphThread()
+        self.GraphWorker.signals.data.connect(self.receive_data)
+        # Execute
+        self.threadpool.start(self.GraphWorker)
+        
+        self.StartGraph.pressed.connect(self.GraphWorker.resume)
+        self.PauseGraph.pressed.connect(self.GraphWorker.pause)
+
+
         """
         Variables for the graphing
         """
@@ -137,13 +163,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.y = {}  # Keep data.
         self.lines = {}  # Keep references to plotted lines, to update.
 
-
-
-    def graph_function(self):
-        worker = GraphThread()
-        worker.signals.data.connect(self.receive_data)
-        # Execute
-        self.threadpool.start(worker)
+    def closeEvent(self, *args, **kwargs):
+        super(QMainWindow, self).closeEvent(*args, **kwargs)
+        print("\nProgram closed, killing all threads!\n\n")
+        self.GraphWorker.kill()
+        
         
     def receive_data(self, data):
         worker_id, x, y = data  # <3>
