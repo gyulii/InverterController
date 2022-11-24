@@ -6,7 +6,7 @@ import time
 import uuid
 
 
-from PySide6.QtCore import (
+from PySide2.QtCore import (
     QObject,
     QRunnable,
     QThreadPool,
@@ -15,11 +15,11 @@ from PySide6.QtCore import (
     Slot,
 )
 
-from PySide6.QtCore import QAbstractListModel, Qt
-from PySide6.QtGui import QImage
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide2.QtCore import QAbstractListModel, Qt
+from PySide2.QtGui import QImage
+from PySide2.QtWidgets import QApplication, QMainWindow
 
-from PySide6.QtWidgets import (
+from PySide2.QtWidgets import (
     QApplication,
     QMainWindow,
     QPushButton,
@@ -225,4 +225,4 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
-app.exec()
+app.exec_()
